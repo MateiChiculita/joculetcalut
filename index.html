@@ -290,17 +290,32 @@
             flex: 1;
             border: 2px solid #ddd;
             border-radius: 8px;
-            background: #f0f4f8;
+            background: white;
             padding: 15px;
             min-height: 600px;
             position: relative;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
         }
 
         .craft-workspace h3 {
             color: #667eea;
+        }
+
+        .combination-display {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #667eea;
+            transition: all 0.2s ease;
         }
 
         .workspace-grid {
@@ -454,6 +469,9 @@
                 <div class="craft-workspace">
                     <h3>✨ Workspace</h3>
                     <div id="discovered-message"></div>
+                    <div class="combination-display" id="combination-display">
+                        Drag 2 elements here to combine
+                    </div>
                     <div class="workspace-grid" id="workspace"></div>
                     <div class="craft-controls">
                         <button class="craft-btn" onclick="craftCombine()">🔨 Combine</button>
@@ -888,6 +906,7 @@
             });
             drawInventory();
             drawWorkspace();
+            updateCombinationDisplay();
         }
 
         function drawInventory() {
@@ -931,6 +950,7 @@
                     const element = e.dataTransfer.getData('text/plain');
                     craftState.workspace[index] = element;
                     drawWorkspace();
+                    updateCombinationDisplay();
                 };
                 
                 if (item) {
@@ -952,6 +972,30 @@
                 
                 workspace.appendChild(slot);
             });
+            
+            updateCombinationDisplay();
+        }
+
+        function updateCombinationDisplay() {
+            const display = document.getElementById('combination-display');
+            const items = craftState.workspace.filter(x => x);
+            
+            if (items.length === 0) {
+                display.textContent = 'Drag 2 elements here to combine';
+                display.style.color = '#667eea';
+            } else if (items.length === 1) {
+                display.innerHTML = `<span>${items[0]}</span>`;
+                display.style.color = '#667eea';
+            } else {
+                const key = items.sort().join('+');
+                const result = craftState.combinations[key];
+                
+                if (result) {
+                    display.innerHTML = `<span>${items[0]} + ${items[1]} = <strong style="color: #2ecc71; font-size: 1.1em;">${result}</strong></span>`;
+                } else {
+                    display.innerHTML = `<span>${items[0]} + ${items[1]} = <strong style="color: #e74c3c;">?</strong></span>`;
+                }
+            }
         }
 
         function craftCombine() {
@@ -965,11 +1009,18 @@
             const result = craftState.combinations[key];
             
             if (result) {
+                // Add animation effect
+                const display = document.getElementById('combination-display');
+                display.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    display.style.transform = 'scale(1)';
+                }, 150);
+                
                 if (!craftState.discovered.has(result)) {
                     craftState.discovered.add(result);
                     craftState.inventory.push(result);
                     const msg = document.getElementById('discovered-message');
-                    msg.innerHTML = `<div class="discovered-message">🎉 Discovered: ${result}!</div>`;
+                    msg.innerHTML = `<div class="discovered-message">🎉 Discovered: <strong>${result}</strong>!</div>`;
                     setTimeout(() => {
                         msg.innerHTML = '';
                     }, 3000);
@@ -984,6 +1035,7 @@
         function clearWorkspace() {
             craftState.workspace = ['', '', '', ''];
             drawWorkspace();
+            updateCombinationDisplay();
         }
 
         function resetCraft() {
