@@ -171,26 +171,33 @@
         // ===== THREE.JS SETUP =====
         const canvas = document.getElementById('canvas');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
 
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setClearColor(0x87CEEB);
+        renderer.setClearColor(0x87CEEB, 1);
         renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+        // Set initial camera position
+        camera.position.set(0, 8, -20);
+        camera.lookAt(0, 2, 0);
 
         // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
 
-        const sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        const sunLight = new THREE.DirectionalLight(0xffffff, 1.0);
         sunLight.position.set(50, 50, 50);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048;
         sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.left = -100;
-        sunLight.shadow.camera.right = 100;
-        sunLight.shadow.camera.top = 100;
-        sunLight.shadow.camera.bottom = -100;
+        sunLight.shadow.camera.left = -150;
+        sunLight.shadow.camera.right = 150;
+        sunLight.shadow.camera.top = 150;
+        sunLight.shadow.camera.bottom = -150;
+        sunLight.shadow.camera.far = 500;
         scene.add(sunLight);
 
         // ===== GAME STATE =====
@@ -260,12 +267,25 @@
         const segmentLength = 5;
         let roadZ = 0;
 
+        // Create a ground plane first
+        const groundGeometry = new THREE.PlaneGeometry(1000, 1000);
+        const groundMaterial = new THREE.MeshStandardMaterial({ color: 0x2a7d2a });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.z = 50;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
         function createRoadSegment(z) {
             const geometry = new THREE.PlaneGeometry(roadWidth, segmentLength);
-            const material = new THREE.MeshStandardMaterial({ color: 0x444444 });
+            const material = new THREE.MeshStandardMaterial({ 
+                color: 0x333333,
+                roughness: 0.8
+            });
             const segment = new THREE.Mesh(geometry, material);
             segment.rotation.x = -Math.PI / 2;
             segment.position.z = z;
+            segment.position.y = 0.01;
             segment.receiveShadow = true;
             scene.add(segment);
             return segment;
@@ -277,26 +297,8 @@
             roadSegmentsMesh.push(segment);
         }
 
-        // Road lines
-        const canvas2d = document.createElement('canvas');
-        canvas2d.width = 512;
-        canvas2d.height = 512;
-        const ctx = canvas2d.getContext('2d');
-        ctx.fillStyle = '#444444';
-        ctx.fillRect(0, 0, 512, 512);
-        ctx.strokeStyle = '#ffff00';
-        ctx.lineWidth = 20;
-        ctx.beginPath();
-        ctx.moveTo(170, 0);
-        ctx.lineTo(170, 512);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(342, 0);
-        ctx.lineTo(342, 512);
-        ctx.stroke();
-
         // ===== OBSTACLES =====
-        const obstacles = [];
+        let obstacles = [];
         const obstacleTypes = [
             { width: 1, height: 1, depth: 1, color: 0xff0000 },
             { width: 2, height: 0.5, depth: 3, color: 0xff6600 },
@@ -320,16 +322,16 @@
         }
 
         // Initial obstacles
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < 20; i++) {
             const x = (Math.random() - 0.5) * (roadWidth - 2);
-            const z = i * 15 + 20;
+            const z = i * 15 + 30;
             if (Math.random() > 0.3) {
                 createObstacle(x, z);
             }
         }
 
         // ===== COLLECTIBLES =====
-        const collectibles = [];
+        let collectibles = [];
 
         function createCollectible(x, z) {
             const geometry = new THREE.OctahedronGeometry(0.4, 0);
@@ -342,6 +344,7 @@
             
             collectible.position.set(x, 1.5, z);
             collectible.castShadow = true;
+            collectible.receiveShadow = true;
             collectible.userData.type = 'collectible';
             
             scene.add(collectible);
@@ -349,7 +352,7 @@
             return collectible;
         }
 
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 15; i++) {
             const x = (Math.random() - 0.5) * (roadWidth - 2);
             const z = i * 30 + 50;
             if (Math.random() > 0.5) {
@@ -452,7 +455,7 @@
             }
 
             // Update player position
-            player.position.copy(gameState.position);
+            player.position.set(gameState.position.x, gameState.position.y, gameState.position.z);
             player.rotation.z = -moveX * 0.1;
 
             // Rotate wheels
@@ -504,12 +507,14 @@
             }
 
             // Camera follow
-            const targetCameraZ = gameState.position.z + 5;
-            camera.position.lerp(
-                new THREE.Vector3(gameState.position.x * 0.3, gameState.position.y + gameState.cameraHeight, targetCameraZ - gameState.cameraDistance),
-                0.1
-            );
-            camera.lookAt(gameState.position.x, gameState.position.y + 1, gameState.position.z + 10);
+            const targetCameraX = gameState.position.x * 0.3;
+            const targetCameraY = gameState.position.y + gameState.cameraHeight;
+            const targetCameraZ = gameState.position.z - gameState.cameraDistance;
+
+            camera.position.x += (targetCameraX - camera.position.x) * 0.15;
+            camera.position.y += (targetCameraY - camera.position.y) * 0.15;
+            camera.position.z += (targetCameraZ - camera.position.z) * 0.15;
+            camera.lookAt(gameState.position.x, gameState.position.y + 1, gameState.position.z + 8);
 
             // Collision check
             checkCollisions();
