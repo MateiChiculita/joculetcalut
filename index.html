@@ -619,34 +619,28 @@
             const board = document.getElementById('board');
             board.innerHTML = '';
             
-            for (let i = 0; i < 5; i++) {
-                let guessIndex = Math.floor(i / 5);
-                let letterIndex = i % 5;
-                
-                let letter = '';
-                let state = '';
-                
-                for (let g = 0; g < wordleState.guesses.length; g++) {
-                    if (g === guessIndex) {
-                        letter = wordleState.guesses[g][letterIndex] || '';
-                        state = getLetterState(g, letterIndex);
-                    }
-                }
-                
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                if (state) tile.classList.add(state);
-                if (letter && !state) tile.classList.add('filled');
-                tile.textContent = letter;
-                board.appendChild(tile);
-            }
-            
-            // Draw remaining tiles
             const maxRows = 6;
-            for (let row = wordleState.guesses.length; row < maxRows; row++) {
+            
+            // Draw all guess rows
+            for (let row = 0; row < maxRows; row++) {
                 for (let col = 0; col < 5; col++) {
+                    let letter = '';
+                    let state = '';
+                    
+                    if (row < wordleState.guesses.length) {
+                        letter = wordleState.guesses[row][col] || '';
+                        state = getLetterState(row, col);
+                    } else if (row === wordleState.guesses.length) {
+                        // Current row - show input value
+                        const input = document.getElementById('guess-input');
+                        letter = input.value[col] || '';
+                    }
+                    
                     const tile = document.createElement('div');
                     tile.className = 'tile';
+                    if (state) tile.classList.add(state);
+                    if (letter && !state) tile.classList.add('filled');
+                    tile.textContent = letter;
                     board.appendChild(tile);
                 }
             }
@@ -728,6 +722,21 @@
             drawBoard();
             drawKeyboard();
             document.getElementById('guess-input').focus();
+        }
+
+        function handleGuessInput(e) {
+            e.target.value = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+            drawBoard();
+        }
+
+        function handleGuessKeydown(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                submitGuess();
+            } else if (e.key === 'Backspace') {
+                // Allow normal backspace behavior
+                setTimeout(() => drawBoard(), 0);
+            }
         }
 
         function updateMessage(msg, type = '') {
@@ -1003,6 +1012,11 @@
         document.addEventListener('DOMContentLoaded', () => {
             newWordleGame();
             initCraft();
+            
+            // Setup input listeners for Wordle
+            const guessInput = document.getElementById('guess-input');
+            guessInput.addEventListener('input', handleGuessInput);
+            guessInput.addEventListener('keydown', handleGuessKeydown);
         });
     </script>
 </body>
