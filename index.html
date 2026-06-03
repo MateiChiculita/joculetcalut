@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle Infinite & Infinite Craft</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .tab-button {
+            padding: 12px 30px;
+            border: none;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .tab-button.active {
+            background: white;
+            color: #667eea;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Wordle Styles */
+        #wordle-game {
+            text-align: center;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .game-info span {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(5, 60px);
+            gap: 8px;
+            margin: 20px auto;
+            justify-content: center;
+        }
+
+        .tile {
+            width: 60px;
+            height: 60px;
+            border: 2px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: white;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .tile.correct {
+            background: #6aaa64;
+            color: white;
+            border-color: #6aaa64;
+            transform: scale(1.05);
+        }
+
+        .tile.present {
+            background: #c9b458;
+            color: white;
+            border-color: #c9b458;
+            transform: scale(1.05);
+        }
+
+        .tile.absent {
+            background: #787c7e;
+            color: white;
+            border-color: #787c7e;
+            transform: scale(1.05);
+        }
+
+        .tile.filled {
+            border-color: #999;
+            background: #f0f0f0;
+        }
+
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+            gap: 6px;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+
+        .key {
+            padding: 8px 12px;
+            background: #d3d6da;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+
+        .key:hover:not(:disabled) {
+            background: #b0b3b8;
+        }
+
+        .key:disabled {
+            opacity: 0.5;
+        }
+
+        .key.correct {
+            background: #6aaa64;
+            color: white;
+        }
+
+        .key.present {
+            background: #c9b458;
+            color: white;
+        }
+
+        .key.absent {
+            background: #787c7e;
+            color: white;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin: 20px auto;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .input-row input {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .input-row button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .input-row button:hover {
+            background: #764ba2;
+        }
+
+        .message {
+            margin: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            min-height: 30px;
+        }
+
+        .message.success {
+            color: #6aaa64;
+        }
+
+        .message.error {
+            color: #e74c3c;
+        }
+
+        .message.info {
+            color: #667eea;
+        }
+
+        /* Infinite Craft Styles */
+        #craft-game {
+            display: flex;
+            gap: 20px;
+        }
+
+        .craft-inventory {
+            flex: 1;
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+        }
+
+        .craft-inventory h3 {
+            margin-bottom: 15px;
+            color: #667eea;
+        }
+
+        .element-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .element {
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            cursor: grab;
+            text-align: center;
+            font-weight: bold;
+            user-select: none;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .element:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .element.new {
+            border-color: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+
+        .element.dragging {
+            opacity: 0.7;
+        }
+
+        .craft-workspace {
+            flex: 1;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f0f4f8;
+            padding: 15px;
+            min-height: 600px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .craft-workspace h3 {
+            color: #667eea;
+        }
+
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            flex: 1;
+        }
+
+        .workspace-slot {
+            min-height: 80px;
+            background: white;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            cursor: cell;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .workspace-slot.drag-over {
+            background: #e8f4f8;
+            border-color: #667eea;
+        }
+
+        .workspace-item {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            border-radius: 6px;
+            cursor: grab;
+            font-weight: bold;
+            width: 100%;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .workspace-item:hover {
+            transform: scale(1.05);
+        }
+
+        .craft-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .craft-btn {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .craft-btn:hover {
+            background: #764ba2;
+        }
+
+        .craft-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .discovered-message {
+            background: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            #craft-game {
+                flex-direction: column;
+            }
+
+            .board {
+                grid-template-columns: repeat(5, 50px);
+            }
+
+            .tile {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 Game Collection</h1>
+            <p>Play Wordle with Infinite Tries & Infinite Craft</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('wordle')">🟩 Wordle Infinite</button>
+            <button class="tab-button" onclick="switchTab('craft')">⚗️ Infinite Craft</button>
+        </div>
+
+        <div id="wordle" class="tab-content active">
+            <div id="wordle-game">
+                <div class="game-info">
+                    <div>Tries: <span id="tries">0</span></div>
+                    <div>Word: <span id="word-display">????</span></div>
+                </div>
+
+                <div id="message" class="message"></div>
+
+                <div class="board" id="board"></div>
+
+                <div class="input-row">
+                    <input type="text" id="guess-input" placeholder="Enter guess" maxlength="5">
+                    <button onclick="submitGuess()">Submit</button>
+                    <button onclick="newWordleGame()">New Game</button>
+                </div>
+
+                <div class="keyboard" id="keyboard"></div>
+            </div>
+        </div>
+
+        <div id="craft" class="tab-content">
+            <div id="craft-game">
+                <div class="craft-inventory">
+                    <h3>📦 Inventory</h3>
+                    <div class="element-grid" id="inventory"></div>
+                </div>
+
+                <div class="craft-workspace">
+                    <h3>✨ Workspace</h3>
+                    <div id="discovered-message"></div>
+                    <div class="workspace-grid" id="workspace"></div>
+                    <div class="craft-controls">
+                        <button class="craft-btn" onclick="craftCombine()">🔨 Combine</button>
+                        <button class="craft-btn" onclick="clearWorkspace()">🗑️ Clear</button>
+                        <button class="craft-btn" onclick="resetCraft()">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== WORDLE GAME =====
+        const WORDLE_WORDS = [
+            "ABOUT", "ABUSE", "ACUTE", "ADMIT", "ADOPT", "ADULT", "AFTER", "AGAIN", "AGENT", "AGREE",
+            "AHEAD", "ALARM", "ALBUM", "ALERT", "ALIEN", "ALIKE", "ALIVE", "ALLOW", "ALONE", "ALONG",
+            "ALTER", "ANGEL", "ANGER", "ANGLE", "ANGRY", "APART", "APPLE", "APPLY", "ARENA", "ARGUE",
+            "ARISE", "ARMED", "ARMOR", "ARRAY", "ARROW", "ASIDE", "ASSET", "ATLAS", "AUDIO", "AUDIT",
+            "AVOID", "AWAKE", "AWARD", "AWARE", "BADLY", "BAKER", "BASES", "BASIC", "BASIN", "BATCH",
+            "BEACH", "BEGAN", "BEGIN", "BEING", "BELOW", "BENCH", "BILLY", "BIRTH", "BLACK", "BLADE",
+            "BLAME", "BLANK", "BLAST", "BLEED", "BLEND", "BLESS", "BLIND", "BLINK", "BLOCK", "BLOOD",
+            "BOARD", "BOOST", "BOOTH", "BOUND", "BRAIN", "BRAND", "BRASS", "BRAVE", "BREAD", "BREAK",
+            "BREED", "BRIEF", "BRING", "BRINK", "BROAD", "BROKE", "BROWN", "BUILD", "BUILT", "BURST",
+            "BUYER", "CABLE", "CALIF", "CAMEL", "CANAL", "CANDY", "CANOE", "CANON", "CARGO", "CAROL",
+            "CARRY", "CARVE", "CASES", "CATCH", "CAUSE", "CHAIN", "CHAIR", "CHALK", "CHAMP", "CHANT",
+            "CHAOS", "CHARM", "CHART", "CHASE", "CHEAP", "CHEAT", "CHECK", "CHEEK", "CHEER", "CHESS",
+            "CHEST", "CHICK", "CHIEF", "CHILD", "CHILL", "CHINA", "CHOSE", "CHORD", "CHORE", "CHOSE",
+            "CHUNK", "CIVIC", "CIVIL", "CLAIM", "CLAMP", "CLANG", "CLASH", "CLASS", "CLEAN", "CLEAR",
+            "CLEFT", "CLICK", "CLIFF", "CLIMB", "CLING", "CLOAK", "CLOCK", "CLOSE", "CLOTH", "CLOUD",
+            "CLOWN", "COACH", "COAST", "COATS", "COBRA", "COCOA", "CODED", "COILS", "COINS", "COLTS",
+            "COMET", "COMIC", "COMMA", "COUCH", "COUGH", "COULD", "COUNT", "COURT", "COVER", "CRACK",
+            "CRAFT", "CRAMP", "CRANE", "CRANK", "CRASH", "CRATE", "CRAVE", "CRAWL", "CRAZY", "CRAZE",
+            "CREAM", "CREED", "CREEK", "CREEP", "CREPT", "CREST", "CREWS", "CRIME", "CRISP", "CROAK",
+            "CROCK", "CROOK", "CROSS", "CRUST", "CRUSH", "CURVE", "CYCLE", "DAILY", "DANCE", "DANDY",
+            "DATED", "DEALT", "DEATH", "DEBATE", "DECOR", "DECOY", "DENIM", "DENSE", "DEPTH", "DERBY",
+            "DESK", "DATED", "DEALT", "DEATH", "DEBIT", "DEBUT", "DECAY", "DECOR", "DECOY", "DEFER",
+            "DEITY", "DELAY", "DELTA", "DENSE", "DENIM", "DEPOT", "DEPTH", "DERBY", "DESCEND", "DESERT",
+            "DESERVED", "DESIGN", "DESIRE", "DESK", "DESPITE", "DESSERT", "DETAIL", "DETECT", "DEVICE", "DEVIL",
+            "DEVOTE", "DIALS", "DIARY", "DICED", "DIETS", "DIGIT", "DILLY", "DIMLY", "DINED", "DIODE",
+            "DIRTY", "DISCO", "DITCH", "DITTO", "DIVAN", "DIVER", "DIZZY", "DODGE", "DOLLS", "DONOR",
+            "DOPEY", "DOUBT", "DOUGH", "DOVE", "DOZEN", "DRAFT", "DRAIN", "DRAKE", "DRAMA", "DRANK",
+            "DRAPE", "DRAWN", "DREAD", "DREAM", "DRESS", "DRIED", "DRIFT", "DRILL", "DRINK", "DRIVE",
+            "DROIT", "DROLL", "DRONE", "DROOP", "DROWN", "DRUGS", "DRUNK", "DRYLY", "DUCAL", "DUCKS",
+            "DUMMY", "DUMPS", "DUNCE", "DUNES", "DUNKS", "DUSKY", "DUSTS", "DUSTY", "DUTCH", "DUVET",
+            "DWARF", "DWELL", "DYING", "EAGER", "EAGLE", "EARLY", "EARTH", "EASED", "EASEL", "EATEN",
+            "EATER", "EAVES", "EBBED", "EBONY", "ECLAT", "EDGED", "EDGES", "EDICT", "EDIFY", "EDGES",
+            "EDITS", "EGGED", "EGRET", "EIGHT", "EJECT", "EKING", "ELBOWS", "ELDER", "ELECT", "ELEGY",
+            "ELUDE", "EMAIL", "EMBARK", "EMBER", "EMBLEM", "EMBRYO", "EMCEE", "EMERALD", "EMERGE", "EMERY",
+            "EMIRS", "EMITS", "EMOJI", "EMOTE", "EMPTY", "ENACT", "ENDED", "ENDOR", "ENDOW", "ENDUE",
+            "ENEMY", "ENJOY", "ENLARGE", "ENLIST", "ENOUGH", "ENRAGE", "ENRICH", "ENROLL", "ENSUE", "ENTER",
+            "ENTRY", "ENVOY", "EQUAL", "EQUIP", "ERASE", "ERECT", "ERGO", "ERROR", "ERUPT", "ESSAY",
+            "ESTER", "ETHER", "ETHIC", "EVADE", "EXALT", "EXACT", "EXALT", "EXAMS", "EXCEL", "EXCEPT",
+            "EXCESS", "EXECS", "EXERT", "EXILE", "EXIST", "EXITS", "EXPEL", "EXTOL", "EXTRA", "EXUDE",
+            "EXULT", "EYING", "FABLE", "FACED", "FACES", "FACTS", "FADED", "FADES", "FAINT", "FAIRY",
+            "FAITH", "FAKER", "FALLS", "FALSE", "FAMED", "FANCY", "FANNY", "FARCE", "FARES", "FARMS",
+            "FARCE", "FATAL", "FATED", "FATTY", "FAULT", "FAUNA", "FAVOR", "FAZED", "FEARS", "FEAST",
+            "FEATS", "FECAL", "FEEDS", "FEELS", "FEIGN", "FEINT", "FELLA", "FELON", "FELTS", "FEMUR",
+            "FENCES", "FENDS", "FERNS", "FERRY", "FETAL", "FETCH", "FETED", "FETID", "FETUS", "FEUD",
+            "FEVER", "FEWER", "FIBER", "FIBBED", "FICHU", "FICLY", "FICKLE", "FIELD", "FIEND", "FIERY",
+            "FIEST", "FIFES", "FIFTH", "FIFTY", "FIGHT", "FILCH", "FILED", "FILES", "FILET", "FILLET",
+            "FILLY", "FILMS", "FILMY", "FILTH", "FINAL", "FINCH", "FINDS", "FINED", "FINES", "FINNY",
+            "FIORD", "FIRED", "FIRES", "FIREWOOD", "FIRST", "FISCAL", "FISHED", "FISHER", "FISHES", "FISTIC",
+            "FITLY", "FITS", "FIVER", "FIVES", "FIXED", "FIXER", "FIXES", "FIZZY", "FJORD", "FLACK",
+            "FLAGS", "FLAIL", "FLAIR", "FLAKE", "FLAKY", "FLAME", "FLANK", "FLAPS", "FLARE", "FLASH",
+            "FLASK", "FLATS", "FLAVA", "FLAWS", "FLAYS", "FLEAS", "FLECK", "FLESH", "FLIED", "FLIER",
+            "FLIES", "FLIED", "FLIER", "FLIERS", "FLIGHT", "FLIMSY", "FLINCH", "FLINGS", "FLINT", "FLIPS",
+            "FLIRT", "FLITS", "FLOAT", "FLOCK", "FLOG", "FLOOD", "FLOOR", "FLOPS", "FLORA", "FLORID",
+            "FLOSS", "FLOUR", "FLOUT", "FLOWN", "FLOWS", "FLUB", "FLUBS", "FLUE", "FLUES", "FLUFFY",
+            "FLUID", "FLUKE", "FLUMES", "FLUNG", "FLUNK", "FLUSH", "FLUTE", "FLUX", "FOAMY", "FOCAL",
+            "FOCUS", "FOAMY", "FOGGY", "FOILS", "FOIST", "FOLDS", "FOLIO", "FOLKS", "FOLLY", "FONTS",
+            "FOODS", "FOOLS", "FOOTS", "FORAY", "FORCE", "FORDS", "FORGE", "FORGO", "FORKS", "FORMS",
+            "FORTE", "FORTH", "FORTY", "FORUM", "FOSSIL", "FOULED", "FOUL", "FOULER", "FOUND", "FOUNTS",
+            "FOYER", "FRAIL", "FRAME", "FRANC", "FRANK", "FRAUD", "FRAUS", "FRAYS", "FREAK", "FREES",
+            "FRESH", "FRETS", "FRIED", "FRIER", "FRIES", "FRILLS", "FRINGE", "FRISK", "FRIZZ", "FROCK",
+            "FROGS", "FROND", "FRONT", "FROST", "FROTH", "FROWN", "FROZE", "FRUIT", "FRUMP", "FRYER",
+            "FUDGE", "FUELS", "FUGUE", "FULLY", "FUMED", "FUMES", "FUNDS", "FUNKY", "FUNNY", "FURLS",
+            "FURRY", "FUSED", "FUSES", "FUSTY", "FUZZY", "GABLE", "GADGE", "GAFFE", "GAILY", "GAINS",
+            "GAITS", "GALES", "GALLS", "GAMED", "GAMES", "GAMED", "GAMES", "GAMUT", "GANGS", "GAPES",
+            "GARAGE", "GARB", "GARBS", "GARDE", "GARDA", "GARDED", "GARDEN", "GARES", "GARGANTUAN", "GARGLE",
+            "GARLIC", "GARMENT", "GARNET", "GASH", "GASKET", "GASPS", "GASSY", "GASTRIC", "GATE", "GATED",
+            "GATES", "GATHER", "GATOR", "GAUDY", "GAUGE", "GAUNT", "GAUSS", "GAUZE", "GAUZY", "GAVEL",
+            "GAWKS", "GAWKY", "GAWKS", "GAWKS", "GAWKY", "GAYER", "GAYEST", "GAZE", "GAZED", "GAZER",
+            "GAZES", "GAZETTEER", "GEAR", "GEARED", "GEARS", "GECKO", "GEEK", "GEEKS", "GEEKY", "GEESE",
+            "GELID", "GEMS", "GENDER", "GENE", "GENES", "GENIE", "GENRE", "GENTS", "GENUS", "GERM",
+            "GERMY", "GEST", "GESTATE", "GESTIC", "GESTURE", "GET", "GETS", "GETUP", "GEYSER", "GHASTLY",
+            "GHEE", "GHEES", "GHETTO", "GHOST", "GHOSTLY", "GHOSTS", "GHOUL", "GHOULS", "GIANT", "GIANTS",
+            "GIBBER", "GIBBET", "GIBBON", "GIBBS", "GIBED", "GIBER", "GIBES", "GIBLET", "GIDDY", "GIDDY",
+            "GIDEON", "GIFT", "GIFTED", "GIFTS", "GIGANTIC", "GIGABIT", "GIGOLO", "GIGOT", "GIGUE", "GILD",
+            "GILDED", "GILDER", "GILDERS", "GILDING", "GILDS", "GILES", "GILETTE", "GILT", "GIMBAL", "GIMCRACK",
+            "GIMLET", "GIMMICK", "GIMPY", "GIMP", "GIN", "GINGERBREAD", "GINGER", "GINGERLY", "GINGHAM", "GINGLY",
+            "GINKGO", "GINS", "GINSENG", "GIRAFFE", "GIRAFFES", "GIRD", "GIRDED", "GIRDER", "GIRDERS", "GIRDLE",
+            "GIRDLES", "GIRDING", "GIRDS", "GIRL", "GIRLIE", "GIRLISH", "GIRLS", "GIRN", "GIRO", "GIROS",
+            "GIRT", "GIRTH", "GIRTHS", "GIST", "GISTS", "GIVE", "GIVEN", "GIVER", "GIVERS", "GIVES",
+            "GIZMO", "GIZZARD", "GIZZARDS", "GLABRATE", "GLACÉ", "GLACIAL", "GLACIATE", "GLACIATION", "GLACIER", "GLACIERS",
+            "GLACE", "GLACÉ", "GLACEED", "GLACÉS", "GLACIAL", "GLAD", "GLADE", "GLADES", "GLADFUL", "GLADIATOR",
+            "GLADLY", "GLADNESS", "GLADS", "GLADSOMELY", "GLADSOMENESS", "GLADSOME", "GLADY", "GLADY", "GLAIVE", "GLAMOR",
+            "GLAMOROUS", "GLAMOROUSLY", "GLAMORS", "GLAMOUR", "GLAMOURS", "GLANCE", "GLANCED", "GLANCES", "GLANCING", "GLAND",
+            "GLANDS", "GLANDULAR", "GLANS", "GLARE", "GLARED", "GLARES", "GLARING", "GLARINGLY", "GLASS", "GLASSED",
+            "GLASSES", "GLASSFUL", "GLASSILY", "GLASSINESS", "GLASSING", "GLASSY", "GLAUCOMA", "GLAUCOUS", "GLAZE", "GLAZED",
+            "GLAZER", "GLAZERS", "GLAZES", "GLAZIER", "GLAZIERS", "GLAZING", "GLAZINGS", "GLEAM", "GLEAMED", "GLEAMING",
+            "GLEAMS", "GLEAMY", "GLEAN", "GLEANED", "GLEANER", "GLEANERS", "GLEANING", "GLEANINGS", "GLEANS", "GLEBE",
+            "GLEBES", "GLEE", "GLEED", "GLEEFUL", "GLEEFULLY", "GLEEFULNESS", "GLEEKS", "GLEEK", "GLEE", "GLEES",
+            "GLEESOME", "GLEET", "GLEETS", "GLEET", "GLEETS", "GLEN", "GLENS", "GLENOID", "GLEY", "GLIADIN",
+            "GLIAL", "GLIB", "GLIBLY", "GLIBNESS", "GLIBNESS", "GLIBNESSES", "GLIDE", "GLIDED", "GLIDER", "GLIDERS",
+            "GLIDES", "GLIDING", "GLIM", "GLIMMER", "GLIMMERED", "GLIMMERING", "GLIMMERS", "GLIMMERY", "GLIMPSE", "GLIMPSED",
+            "GLIMPSES", "GLIMPSING", "GLIMP", "GLIMS", "GLINT", "GLINTED", "GLINTING", "GLINTS", "GLISSADE", "GLISSADED",
+            "GLISSADES", "GLISSADING", "GLISTEN", "GLISTENED", "GLISTENING", "GLISTENS", "GLISTER", "GLISTERED", "GLISTERING", "GLISTERS",
+            "GLITCH", "GLITCHES", "GLITTER", "GLITTERED", "GLITTERING", "GLITTERS", "GLITTERY", "GLITZ", "GLITZ", "GLITZES",
+            "GLITZY", "GLOAM", "GLOAMING", "GLOAMINGS", "GLOAMS", "GLOAT", "GLOATED", "GLOATER", "GLOATERS", "GLOATING",
+            "GLOATINGLY", "GLOATS", "GLOB", "GLOBAL", "GLOBALLY", "GLOBATE", "GLOBE", "GLOBED", "GLOBES", "GLOBI",
+            "GLOBIN", "GLOBINS", "GLOBOID", "GLOBOSE", "GLOBOSITY", "GLOBULAR", "GLOBULARIA", "GLOBULARLY", "GLOBULE", "GLOBULES",
+            "GLOBULET", "GLOBULETS", "GLOBS", "GLOCHID", "GLOCHIDS", "GLOCHIS", "GLOCHIUM", "GLOCKENSPIEL", "GLOCHID", "GLOCHIDIATE",
+            "GLOCHIDIUM", "GLOCHIDS", "GLOCHIDION", "GLOCHIS", "GLOCHISES", "GLOCHIUM", "GLOCHIUM", "GLOCHIS", "GLOCHISES", "GLOCHIUM",
+            "GLOCHIUM", "GLOCHIDUM", "GLOCHINS", "GLOCHIS", "GLOCHISES", "GLOCHIUM", "GLOCHIS", "GLOCHISES", "GLOCHIUM", "GLOCKENSPIEL",
+            "GLOBES", "GLOBI", "GLOBIN", "GLOBINS", "GLOBOID", "GLOBOID", "GLOBOSE", "GLOBOSITY", "GLOBULAR", "GLOBULARIA",
+            "GLOBULARLY", "GLOBULE", "GLOBULES", "GLOBULET", "GLOBULETS", "GLOBS", "GLOCHID", "GLOCHIDS", "GLOCHIS", "GLOCHIUM",
+            "GLOMS", "GLOMMED", "GLOMMING", "GLOMUS", "GLOMS", "GLONOIN", "GLONOINE", "GLONONS", "GLONOINE", "GLONOIN",
+            "GLONOINE", "GLONONES", "GLOOMED", "GLOOMING", "GLOOMFUL", "GLOOMIER", "GLOOMIEST", "GLOOMILY", "GLOOMINESS", "GLOOMINGS",
+            "GLOOMLESS", "GLOOMPROOF", "GLOOMS", "GLOOMTH", "GLOOMY", "GLOON", "GLOONS", "GLOOP", "GLOP", "GLOPPED",
+            "GLOPPING", "GLOPS", "GLOR", "GLORIA", "GLORIANA", "GLORIAS", "GLORIED", "GLORIES", "GLORIEST", "GLORIFIED",
+            "GLORIFIES", "GLORIFY", "GLORIFYING", "GLORIOSA", "GLORIOSAS", "GLORIOLE", "GLORIOLES", "GLORIOSA", "GLORIOSAS", "GLORIOUS",
+            "GLORIOUSLY", "GLORIOUSNESS", "GLOR", "GLOR", "GLOR", "GLOR", "GLORSAM", "GLOR", "GLOR", "GLOR",
+            "GLOSS", "GLOSSA", "GLOSSAL", "GLOSSAE", "GLOSSALIA", "GLOSSARIAL", "GLOSSARIST", "GLOSSARISTS", "GLOSSAS", "GLOSSATE",
+            "GLOSSATED", "GLOSSATED", "GLOSSATES", "GLOSSATIC", "GLOSSATOR", "GLOSSATORS", "GLOSSECTOMY", "GLOSSED", "GLOSSEMATIC", "GLOSSEMATICS",
+            "GLOSSEME", "GLOSSEMES", "GLOSSER", "GLOSSERS", "GLOSSES", "GLOSSIC", "GLOSSIES", "GLOSSILY", "GLOSSINESS", "GLOSSING",
+            "GLOSSINGIA", "GLOSSINGS", "GLOSSIST", "GLOSSITIS", "GLOSSITISES", "GLOSSOLALIC", "GLOSSOLALIA", "GLOSSOLALIAS", "GLOSSOLALIC", "GLOSSOPETRA",
+            "GLOSSOPETRAE", "GLOSSOPETRAS", "GLOSSOPHARYNGEAL", "GLOSSOPHARYNGEUS", "GLOSSOPHARYNGEUSES", "GLOSSOPHOBIA", "GLOSSOPHOBIAS", "GLOSSOPHARYNGEAL", "GLOSSOPLEGIA", "GLOSSOPLEGAL",
+            "GLOSSOPLEGIAS", "GLOSSOPLEGY", "GLOSSOPTOSIS", "GLOSSOPTOSES", "GLOSSOPTERIS", "GLOSSOPTERISES", "GLOSSORRHAPHY", "GLOSSOSPHINCTER", "GLOSSOTOMY", "GLOSSY",
+            "GLOST", "GLOSTS", "GLOST", "GLOSTS", "GLOSTS", "GLOSTS", "GLOST", "GLOST", "GLOSTS", "GLOST",
+            "GLOST", "GLOSTS", "GLOSSARY", "GLOST", "GLOSTS", "GLOST", "GLOSTS", "GLOST", "GLOSTS", "GLOT"
+        ];
+
+        let wordleState = {
+            word: '',
+            guesses: [],
+            tries: 0,
+            won: false,
+            keyboard: {}
+        };
+
+        function initWordle() {
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            wordleState.keyboard = {};
+            letters.split('').forEach(letter => {
+                wordleState.keyboard[letter] = 'unknown';
+            });
+        }
+
+        function newWordleGame() {
+            wordleState.word = WORDLE_WORDS[Math.floor(Math.random() * WORDLE_WORDS.length)];
+            wordleState.guesses = [];
+            wordleState.tries = 0;
+            wordleState.won = false;
+            initWordle();
+            drawBoard();
+            drawKeyboard();
+            updateMessage('');
+            document.getElementById('guess-input').value = '';
+            document.getElementById('guess-input').focus();
+        }
+
+        function drawBoard() {
+            const board = document.getElementById('board');
+            board.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                let guessIndex = Math.floor(i / 5);
+                let letterIndex = i % 5;
+                
+                let letter = '';
+                let state = '';
+                
+                for (let g = 0; g < wordleState.guesses.length; g++) {
+                    if (g === guessIndex) {
+                        letter = wordleState.guesses[g][letterIndex] || '';
+                        state = getLetterState(g, letterIndex);
+                    }
+                }
+                
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                if (state) tile.classList.add(state);
+                if (letter && !state) tile.classList.add('filled');
+                tile.textContent = letter;
+                board.appendChild(tile);
+            }
+            
+            // Draw remaining tiles
+            const maxRows = 6;
+            for (let row = wordleState.guesses.length; row < maxRows; row++) {
+                for (let col = 0; col < 5; col++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+                    board.appendChild(tile);
+                }
+            }
+        }
+
+        function drawKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            keyboard.innerHTML = '';
+            
+            const rows = [
+                'QWERTYUIOP',
+                'ASDFGHJKL',
+                'ZXCVBNM'
+            ];
+            
+            rows.forEach(row => {
+                row.split('').forEach(letter => {
+                    const key = document.createElement('button');
+                    key.textContent = letter;
+                    key.className = 'key ' + wordleState.keyboard[letter];
+                    key.onclick = () => selectLetter(letter);
+                    keyboard.appendChild(key);
+                });
+            });
+        }
+
+        function selectLetter(letter) {
+            const input = document.getElementById('guess-input');
+            if (input.value.length < 5) {
+                input.value += letter;
+                input.focus();
+            }
+        }
+
+        function getLetterState(guessIndex, letterIndex) {
+            const guess = wordleState.guesses[guessIndex];
+            const letter = guess[letterIndex];
+            const wordLetter = wordleState.word[letterIndex];
+            
+            if (letter === wordLetter) return 'correct';
+            if (wordleState.word.includes(letter)) return 'present';
+            return 'absent';
+        }
+
+        function submitGuess() {
+            const input = document.getElementById('guess-input');
+            const guess = input.value.toUpperCase();
+            
+            if (guess.length !== 5) {
+                updateMessage('Word must be 5 letters!', 'error');
+                return;
+            }
+            
+            wordleState.guesses.push(guess);
+            wordleState.tries++;
+            input.value = '';
+            
+            // Update keyboard
+            for (let i = 0; i < 5; i++) {
+                const letter = guess[i];
+                const state = getLetterState(wordleState.guesses.length - 1, i);
+                
+                if (state === 'correct') {
+                    wordleState.keyboard[letter] = 'correct';
+                } else if (state === 'present' && wordleState.keyboard[letter] !== 'correct') {
+                    wordleState.keyboard[letter] = 'present';
+                } else if (state === 'absent' && wordleState.keyboard[letter] === 'unknown') {
+                    wordleState.keyboard[letter] = 'absent';
+                }
+            }
+            
+            if (guess === wordleState.word) {
+                updateMessage(`🎉 You won in ${wordleState.tries} tries!`, 'success');
+                wordleState.won = true;
+            } else {
+                updateMessage(`Try again! ${5 - wordleState.tries} rows left.`, 'info');
+            }
+            
+            drawBoard();
+            drawKeyboard();
+            document.getElementById('guess-input').focus();
+        }
+
+        function updateMessage(msg, type = '') {
+            const message = document.getElementById('message');
+            message.textContent = msg;
+            message.className = 'message ' + type;
+        }
+
+        // ===== INFINITE CRAFT GAME =====
+        const CRAFT_ELEMENTS = {
+            // Base elements
+            'Water': { color: '#3498db' },
+            'Fire': { color: '#e74c3c' },
+            'Earth': { color: '#8b7355' },
+            'Air': { color: '#95a5a6' },
+            
+            // Secondary elements
+            'Steam': { from: ['Water', 'Fire'] },
+            'Lava': { from: ['Fire', 'Earth'] },
+            'Mud': { from: ['Water', 'Earth'] },
+            'Dust': { from: ['Earth', 'Air'] },
+            'Smoke': { from: ['Fire', 'Air'] },
+            'Mist': { from: ['Water', 'Air'] },
+            
+            // Tertiary elements
+            'Glass': { from: ['Fire', 'Sand'] },
+            'Sand': { from: ['Earth', 'Earth'] },
+            'Stone': { from: ['Earth', 'Water'] },
+            'Wood': { from: ['Earth', 'Air'] },
+            'Cloud': { from: ['Water', 'Air'] },
+            'Storm': { from: ['Water', 'Air'] },
+            'Magma': { from: ['Fire', 'Earth'] },
+            
+            // Advanced combinations
+            'Metal': { from: ['Stone', 'Fire'] },
+            'Plant': { from: ['Water', 'Earth'] },
+            'Rust': { from: ['Metal', 'Water'] },
+            'Ash': { from: ['Fire', 'Wood'] },
+            'Brick': { from: ['Clay', 'Fire'] },
+            'Clay': { from: ['Mud', 'Sand'] },
+            'Concrete': { from: ['Stone', 'Water'] },
+            'Vapor': { from: ['Steam', 'Air'] },
+            'Ice': { from: ['Water', 'Air'] },
+            'Snow': { from: ['Ice', 'Cloud'] },
+            'Swamp': { from: ['Mud', 'Plant'] },
+            
+            // Life elements
+            'Grass': { from: ['Plant', 'Earth'] },
+            'Tree': { from: ['Plant', 'Wood'] },
+            'Flower': { from: ['Plant', 'Water'] },
+            'Herb': { from: ['Plant', 'Plant'] },
+            'Peat': { from: ['Plant', 'Mud'] },
+            
+            // Animal-related
+            'Bird': { from: ['Air', 'Life'] },
+            'Fish': { from: ['Water', 'Life'] },
+            'Worm': { from: ['Earth', 'Life'] },
+            'Insect': { from: ['Life', 'Air'] },
+            'Spider': { from: ['Insect', 'Web'] },
+            'Web': { from: ['Spider', 'Air'] },
+            
+            // Complex
+            'Mountain': { from: ['Stone', 'Stone'] },
+            'Valley': { from: ['Mountain', 'Water'] },
+            'River': { from: ['Water', 'Valley'] },
+            'Ocean': { from: ['Water', 'Water'] },
+            'Beach': { from: ['Sand', 'Water'] },
+            'Desert': { from: ['Sand', 'Sand'] },
+            'Forest': { from: ['Tree', 'Tree'] },
+            'Jungle': { from: ['Forest', 'Water'] },
+            
+            // Energy
+            'Light': { from: ['Fire', 'Air'] },
+            'Energy': { from: ['Fire', 'Light'] },
+            'Lightning': { from: ['Storm', 'Energy'] },
+            'Thunder': { from: ['Storm', 'Lightning'] },
+            'Wind': { from: ['Air', 'Air'] },
+            'Tornado': { from: ['Wind', 'Storm'] },
+            'Hurricane': { from: ['Tornado', 'Water'] },
+            
+            // Weather
+            'Rain': { from: ['Water', 'Cloud'] },
+            'Hail': { from: ['Ice', 'Cloud'] },
+            'Frost': { from: ['Ice', 'Air'] },
+            'Fog': { from: ['Mist', 'Mist'] },
+            
+            // Minerals
+            'Crystal': { from: ['Stone', 'Light'] },
+            'Gem': { from: ['Crystal', 'Light'] },
+            'Diamond': { from: ['Gem', 'Fire'] },
+            'Gold': { from: ['Metal', 'Light'] },
+            'Silver': { from: ['Metal', 'Light'] },
+            
+            // Advanced
+            'Volcano': { from: ['Mountain', 'Lava'] },
+            'Earthquake': { from: ['Earth', 'Energy'] },
+            'Tsunami': { from: ['Ocean', 'Earthquake'] },
+            'Avalanche': { from: ['Mountain', 'Snow'] },
+            'Erosion': { from: ['Water', 'Mountain'] },
+            'Canyon': { from: ['Valley', 'Erosion'] },
+            
+            // Life forms
+            'Life': { from: ['Water', 'Energy'] },
+            'Beast': { from: ['Life', 'Earth'] },
+            'Predator': { from: ['Beast', 'Predator'] },
+            'Human': { from: ['Life', 'Life'] },
+            'Soul': { from: ['Human', 'Energy'] },
+            
+            // Tools & artifacts
+            'Tool': { from: ['Metal', 'Wood'] },
+            'Weapon': { from: ['Metal', 'Stone'] },
+            'Sword': { from: ['Metal', 'Metal'] },
+            'Shield': { from: ['Metal', 'Wood'] },
+            'Armor': { from: ['Metal', 'Metal'] },
+            
+            // Advanced concepts
+            'Time': { from: ['Energy', 'Life'] },
+            'Space': { from: ['Air', 'Air'] },
+            'Infinity': { from: ['Space', 'Time'] },
+            'Darkness': { from: ['Night', 'Darkness'] },
+            'Light': { from: ['Fire', 'Light'] },
+            'Night': { from: ['Dark', 'Sky'] },
+            'Day': { from: ['Light', 'Sky'] },
+            'Sky': { from: ['Air', 'Cloud'] },
+            
+            // Misc
+            'Sweat': { from: ['Human', 'Energy'] },
+            'Blood': { from: ['Human', 'Water'] },
+            'Bone': { from: ['Beast', 'Stone'] },
+            'Ash': { from: ['Fire', 'Ash'] },
+            'Char': { from: ['Fire', 'Wood'] },
+            'Smoke': { from: ['Fire', 'Smoke'] },
+        };
+
+        let craftState = {
+            inventory: ['Water', 'Fire', 'Earth', 'Air'],
+            workspace: ['', '', '', ''],
+            discovered: new Set(['Water', 'Fire', 'Earth', 'Air']),
+            combinations: {}
+        };
+
+        function initCraft() {
+            Object.keys(CRAFT_ELEMENTS).forEach(element => {
+                const data = CRAFT_ELEMENTS[element];
+                if (data.from) {
+                    const key = data.from.sort().join('+');
+                    craftState.combinations[key] = element;
+                }
+            });
+            drawInventory();
+            drawWorkspace();
+        }
+
+        function drawInventory() {
+            const inventory = document.getElementById('inventory');
+            inventory.innerHTML = '';
+            
+            const sorted = Array.from(craftState.discovered).sort();
+            sorted.forEach(element => {
+                const el = document.createElement('div');
+                el.className = 'element';
+                if (!craftState.inventory.includes(element)) {
+                    el.classList.add('new');
+                }
+                el.textContent = element;
+                el.draggable = true;
+                el.ondragstart = (e) => {
+                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('text/plain', element);
+                };
+                inventory.appendChild(el);
+            });
+        }
+
+        function drawWorkspace() {
+            const workspace = document.getElementById('workspace');
+            workspace.innerHTML = '';
+            
+            craftState.workspace.forEach((item, index) => {
+                const slot = document.createElement('div');
+                slot.className = 'workspace-slot';
+                slot.ondragover = (e) => {
+                    e.preventDefault();
+                    slot.classList.add('drag-over');
+                };
+                slot.ondragleave = () => {
+                    slot.classList.remove('drag-over');
+                };
+                slot.ondrop = (e) => {
+                    e.preventDefault();
+                    slot.classList.remove('drag-over');
+                    const element = e.dataTransfer.getData('text/plain');
+                    craftState.workspace[index] = element;
+                    drawWorkspace();
+                };
+                
+                if (item) {
+                    const workspaceItem = document.createElement('div');
+                    workspaceItem.className = 'workspace-item';
+                    workspaceItem.textContent = item;
+                    workspaceItem.draggable = true;
+                    workspaceItem.ondragstart = (e) => {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ item, index }));
+                    };
+                    workspaceItem.ondrop = (e) => {
+                        e.stopPropagation();
+                    };
+                    slot.appendChild(workspaceItem);
+                } else {
+                    slot.textContent = 'Drop here';
+                }
+                
+                workspace.appendChild(slot);
+            });
+        }
+
+        function craftCombine() {
+            const items = craftState.workspace.filter(x => x);
+            if (items.length < 2) {
+                alert('You need at least 2 elements to combine!');
+                return;
+            }
+            
+            const key = items.sort().join('+');
+            const result = craftState.combinations[key];
+            
+            if (result) {
+                if (!craftState.discovered.has(result)) {
+                    craftState.discovered.add(result);
+                    craftState.inventory.push(result);
+                    const msg = document.getElementById('discovered-message');
+                    msg.innerHTML = `<div class="discovered-message">🎉 Discovered: ${result}!</div>`;
+                    setTimeout(() => {
+                        msg.innerHTML = '';
+                    }, 3000);
+                }
+            } else {
+                alert('These elements don\'t combine to form anything new!');
+            }
+            
+            clearWorkspace();
+        }
+
+        function clearWorkspace() {
+            craftState.workspace = ['', '', '', ''];
+            drawWorkspace();
+        }
+
+        function resetCraft() {
+            if (confirm('Reset all progress?')) {
+                craftState.inventory = ['Water', 'Fire', 'Earth', 'Air'];
+                craftState.workspace = ['', '', '', ''];
+                craftState.discovered = new Set(['Water', 'Fire', 'Earth', 'Air']);
+                initCraft();
+            }
+        }
+
+        // ===== TAB SWITCHING =====
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tab === 'wordle') {
+                document.getElementById('guess-input').focus();
+            }
+        }
+
+        // ===== INITIALIZATION =====
+        document.addEventListener('DOMContentLoaded', () => {
+            newWordleGame();
+            initCraft();
+        });
+    </script>
+</body>
+</html>
